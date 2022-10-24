@@ -69,7 +69,7 @@ int list_dtor(List *list) {
     return NO_LIST_ERORS;
 }
 
-int list_insert(List *list, Elem_t elem, size_t position) {
+size_t list_insert(List *list, Elem_t elem, size_t position) {
     int errors = NO_LIST_ERORS;
 
     if (list == nullptr) {
@@ -98,10 +98,10 @@ int list_insert(List *list, Elem_t elem, size_t position) {
 
     ++list->busy_elems;
 
-    return errors;
+    return next;
 }
 
-int list_pop(List *list, size_t position) {
+Elem_t list_pop(List *list, size_t position) {
     if (list == nullptr) {
         fprintf(stderr, "Error: can't pop element to non-existing list\n");
         return NULLPTR_TO_LIST;
@@ -128,13 +128,47 @@ int list_pop(List *list, size_t position) {
     return popped;
 }
 
-static int check_position(List *list, size_t position) {
+static int check_position(const List *list, size_t position) {
     if (position > list->list_size) {
         return POS_DONT_EXIST;
     }
     return NO_LIST_ERORS;
 }
 
-static int cell_is_free(List_elem* elem) {
+static int cell_is_free(const List_elem* elem) {
     return (elem->val == data_poison && elem->prev == prev_poison);
+}
+
+static int verify_loop(const List *list) {
+    size_t next = list->data[0].next;
+
+    for (size_t i = 0; i < list->busy_elems - 1; ++i) {
+        next = list->data[next].next;
+        if (next == 0) {
+            return (BROKEN_LOOP);
+        }
+    }
+
+    next = list->data[next].next;
+
+    if (next != 0) {
+        return BROKEN_LOOP;
+    }
+
+    return NO_LIST_ERORS;
+}
+
+int list_verificator(const List *list) {
+    int errors = NO_LIST_ERORS;
+
+    CHECK_FOR_NULLPTR(list, errors, NULLPTR_TO_LIST);
+
+    RETURN_IF(errors & NULLPTR_TO_LIST);
+
+    CHECK_FOR_NULLPTR(list->cr_logs, errors, NULLPTR_TO_LOGS);
+    CHECK_FOR_NULLPTR(list->data,    errors, NULLPTR_TO_DATA);
+
+    errors |= verify_loop(list);
+
+    return errors;
 }
