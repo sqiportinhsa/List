@@ -9,10 +9,11 @@ int main() {
 
     List list1 = {};
     list_ctr(&list1, 10);
-    list_insert(&list1, 1, 0);
+    for (int i = 1; i < 5; ++i) {
+        list_insert(&list1, i, i-1);
+    }
     dump_list(&list1);
-    printf("%d ", list_pop(&list1, 1));
-    printf("%d", list_verificator(&list1));
+    resize_list(&list1, 15, false);
     dump_list(&list1);
     list_dtor(&list1);
 

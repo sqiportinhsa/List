@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 
 int real_list_ctr(List *list, size_t list_size, const char *file, const char *func, int line) {
     if (list == nullptr) {
         fprintf(stderr, "can't create list: nullptr to it\n");
+        dump_list(list);
         return NULLPTR_TO_LIST;
     }
 
@@ -16,6 +18,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 
     if (list->data == nullptr) {
         fprintf(stderr, "can't create list of size %zu: not enough memory\n", list_size);
+        dump_list(list);
         list_dtor(list);
         return NOT_ENOUGTH_MEM;
     }
@@ -24,6 +27,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 
     if (list->data == nullptr) {
         fprintf(stderr, "can't create list of size %zu: not enough memory for logs\n", list_size);
+        dump_list(list);
         list_dtor(list);
         return NOT_ENOUGTH_MEM;
     }
@@ -36,7 +40,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->data[0].next = 0;
 
     for (size_t i = 1; i <= list_size; ++i) {
-        list->data[i].next = (i + 1) % list_size;
+        list->data[i].next = (i + 1) % (list_size + 1);
         list->data[i].val  = data_poison;
         list->data[i].prev = prev_poison;
     }
@@ -53,6 +57,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 int list_dtor(List *list) {
     if (list == nullptr) {
         fprintf(stderr, "can't destruct list: pointer to it is nullptr\n");
+        dump_list(list);
         return NULLPTR_TO_LIST;
     }
 
@@ -79,6 +84,7 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
 
     if (list->free == 0) {
         fprintf(stderr, "Error: can't add element to full list\n");
+        dump_list(list);
         return LIST_IS_FULL;
     }
 
@@ -112,6 +118,7 @@ Elem_t list_pop(List *list, size_t position) {
 
     if (position == 0) {
         fprintf(stderr, "Error: can't pop zero element of list\n");
+        dump_list(list);
         return POP_ZERO_ELEM;
     }
 
@@ -175,8 +182,8 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
         fprintf(output, "without creation info (logs ptr in nullptr):\n");
     } else {
         fprintf(output, "created at %s(%d), function %s:\n", list->cr_logs->file_of_creation, 
-                                                           list->cr_logs->line_of_creation, 
-                                                           list->cr_logs->func_of_creation);
+                                                             list->cr_logs->line_of_creation, 
+                                                             list->cr_logs->func_of_creation);
     }
 
     fprintf(output, "List info:\n");
@@ -194,21 +201,77 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
     }
 
     fprintf(output, "\n");
+    fflush(output);
+
+    return errors;
+}
+
+int resize_list(List *list, size_t new_size, bool sort) {
+    int errors = NO_LIST_ERORS;
+
+    CHECK_FOR_NULLPTR_WITH_MESSAGE(list, errors, NULLPTR_TO_LIST, 
+                                   "Error: can't resize non existing list\n");
+
+    if (new_size < list->busy_elems) {
+        return CANNOT_RESIZE;
+    }
+
+    List_elem *new_data = (List_elem*) calloc(new_size, sizeof(List_elem));
+
+    int size = sizeof(List_elem);
+
+    if (list->data == nullptr) {
+        errors |= NULLPTR_TO_DATA;
+
+    } else if (sort) {
+        size_t pos_in_list = 0;
+
+        for (size_t i = 0; i <= list->busy_elems; ++i) {
+            memcpy(new_data + i*size, list->data + pos_in_list*size, size);
+            pos_in_list = list->data[pos_in_list].next;
+        }
+
+    } else {
+        size_t dif = 0;
+
+        if (list->list_size > new_size) {
+            dif = list->list_size - new_size;
+        }
+
+        for (size_t i = 0; i < dif; ++i) {
+            if (!cell_is_free(&list->data[list->list_size - i])) {
+                dif = i;
+                break;
+            }
+        }
+
+        memcpy(new_data, list->data, (list->busy_elems - dif) * size);
+    }
+
+    for (size_t i = list->busy_elems; i <= new_size; ++i) {
+        new_data[i].next = (i + 1) % (new_size + 1);
+        new_data[i].val  = data_poison;
+        new_data[i].prev = prev_poison;
+    }
+
+    free(list->data);
+    list->data      = new_data;
+    list->list_size = new_size;
 
     return errors;
 }
 
 static void dump_list_data(const List *list, FILE *output) {
     fprintf(output, "\t\tdata: {");
-    for (size_t i = 0; i <= list->busy_elems; ++i) {
+    for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8d ", list->data[i].val);
     }
     fprintf(output, "}\n\t\tprev: {");
-    for (size_t i = 0; i <= list->busy_elems; ++i) {
+    for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8zu ", list->data[i].prev);
     }
     fprintf(output, "}\n\t\tnext: {");
-    for (size_t i = 0; i <= list->busy_elems; ++i) {
+    for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8zu ", list->data[i].next);
     }
     fprintf(output, "}\n");
