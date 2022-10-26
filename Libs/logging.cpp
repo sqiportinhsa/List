@@ -9,3 +9,8 @@ FILE* GetLogStream() {
 void SetLogStream(FILE *stream) {
     Logstream = stream;
 }
+
+void log (const char *zv)
+{
+    fprintf (Logstream, zv);
+}

@@ -11,5 +11,6 @@ typedef struct {
 
 void  SetLogStream(FILE *stream);
 FILE* GetLogStream();
+void log (const char *zv);
 
 #endif
