@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "list.h"
-#include "Libs\logging.h"
+#include "Libs/logging.h"
 
 int main() {
     FILE *output = fopen("logs.txt", "w");
@@ -9,10 +9,15 @@ int main() {
 
     List list1 = {};
     list_ctr(&list1, 10);
-    list_insert(&list1, 1, 0);
+    for (int i = 1; i < 5; ++i) {
+        list_insert(&list1, i, i-1);
+    }
+    for (int i = 6; i < 10; ++i) {
+        list_insert(&list1, i, i-3);
+        dump_list(&list1);
+    }
     dump_list(&list1);
-    printf("%d ", list_pop(&list1, 1));
-    printf("%d", list_verificator(&list1));
+    resize_list_with_sort(&list1, 1);
     dump_list(&list1);
     list_dtor(&list1);
 

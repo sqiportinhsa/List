@@ -33,6 +33,7 @@ typedef enum {
     POS_DONT_EXIST  = 1 << 6,
     BROKEN_LOOP     = 1 << 7,
     NON_POISON_FREE = 1 << 8,
+    CANNOT_RESIZE   = 1 << 9,
 } List_errors;
 
 #define RETURN_IF(error) if (error)      \
@@ -55,13 +56,15 @@ typedef enum {
 
 int real_list_ctr(List *list, size_t list_size, const char *file, const char *func, int line);
 int list_dtor(List *list);
+
 size_t list_insert(List *list, Elem_t elem, size_t position);
 int list_pop(List *list, size_t position);
+
 int list_verificator(const List *list);
+
 int real_dump_list(const List *list, const char* file, const char* func, int line);
-static int check_position(const List *list, size_t position);
-static int cell_is_free(const List_elem *elem);
-static int verify_loop(const List *list);
-static void dump_list_data(const List *list, FILE *output);
+
+int resize_list_without_sort(List *list, size_t new_size);
+int resize_list_with_sort(List *list, size_t new_size);
 
 #endif
