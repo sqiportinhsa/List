@@ -17,7 +17,7 @@ static void dump_list_data(const List *list, FILE *output);
 
 int real_list_ctr(List *list, size_t list_size, const char *file, const char *func, int line) {
     if (list == nullptr) {
-        fprintf(stderr, "can't create list: nullptr to it\n");
+        PrintToLogs("can't create list: nullptr to it\n");
         dump_list(list);
         return NULLPTR_TO_LIST;
     }
@@ -28,7 +28,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->data = (List_elem*) calloc(list_size + 1, sizeof(List_elem));
 
     if (list->data == nullptr) {
-        fprintf(stderr, "can't create list of size %zu: not enough memory\n", list_size);
+        PrintToLogs("can't create list of size %zu: not enough memory\n", list_size);
         dump_list(list);
         list_dtor(list);
         return NOT_ENOUGTH_MEM;
@@ -37,7 +37,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->cr_logs = (Creation_logs*) calloc(1, sizeof(Creation_logs));
 
     if (list->data == nullptr) {
-        fprintf(stderr, "can't create list of size %zu: not enough memory for logs\n", list_size);
+        PrintToLogs("can't create list of size %zu: not enough memory for logs\n", list_size);
         dump_list(list);
         list_dtor(list);
         return NOT_ENOUGTH_MEM;
@@ -63,7 +63,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 
 int list_dtor(List *list) {
     if (list == nullptr) {
-        fprintf(stderr, "can't destruct list: pointer to it is nullptr\n");
+        PrintToLogs("can't destruct list: pointer to it is nullptr\n");
         dump_list(list);
         return NULLPTR_TO_LIST;
     }
@@ -90,7 +90,7 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
                                    "Error: can't add element because data ptr is nullptr\n");
 
     if (list->free == 0) {
-        log("Error: can't add element to full list\n");
+        PrintToLogs("Error: can't add element to full list\n");
         dump_list(list);
         return LIST_IS_FULL;
     }
@@ -127,7 +127,7 @@ Elem_t list_pop(List *list, size_t position) {
                                    "Error: can't pop element because data ptr is nullptr\n");
 
     if (position == 0) {
-        fprintf(stderr, "Error: can't pop zero element of list\n");
+        PrintToLogs("Error: can't pop zero element of list\n");
         dump_list(list);
         return POP_ZERO_ELEM;
     }
