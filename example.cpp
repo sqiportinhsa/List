@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#include "list.h"
+#include "new_list.h"
 #include "Libs/logging.h"
 
 int main() {
-    FILE *output = fopen("logs.txt", "w");
+    FILE *output = fopen("logs.html", "w");
     SetLogStream(output);
 
     List list1 = {};
