@@ -111,13 +111,13 @@ int list_dtor(List *list);
 
 size_t list_insert(List *list, Elem_t elem, size_t position);
 
-size_t insert_head(List *list, Elem_t elem);
-size_t insert_back(List *list, Elem_t elem);
+size_t list_insert_head(List *list, Elem_t elem);
+size_t list_insert_back(List *list, Elem_t elem);
 
 Elem_t list_pop(List *list, size_t position);
 
-Elem_t pop_head(List *list);
-Elem_t pop_back(List *list);
+Elem_t list_pop_head(List *list);
+Elem_t list_pop_back(List *list);
 
 int list_verificator(const List *list);
 

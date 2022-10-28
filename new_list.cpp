@@ -129,7 +129,7 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
     return inserted;
 }
 
-size_t insert_head(List *list, Elem_t elem) {
+size_t list_insert_head(List *list, Elem_t elem) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
@@ -138,7 +138,7 @@ size_t insert_head(List *list, Elem_t elem) {
     return list_insert(list, elem, 0);
 }
 
-size_t insert_back(List *list, Elem_t elem) {
+size_t list_insert_back(List *list, Elem_t elem) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
@@ -184,7 +184,7 @@ Elem_t list_pop(List *list, size_t position) {
     return popped;
 }
 
-Elem_t pop_head(List *list) {
+Elem_t list_pop_head(List *list) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
@@ -193,7 +193,7 @@ Elem_t pop_head(List *list) {
     return list_pop(list, 0);
 }
 
-Elem_t pop_back(List *list) {
+Elem_t list_pop_back(List *list) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
@@ -277,9 +277,17 @@ int resize_list_without_sort(List *list, size_t new_size) {
 
     new_size = calculate_new_size(list, new_size);
 
+    if (new_size < list->free) {
+        list->free = 0;
+    }
+
+    if (list->free == 0 && new_size > list->list_size) {
+        list->free = list->list_size + 1;
+    }
+
     list->data = (List_elem*) realloc(list->data, sizeof(List_elem) * (new_size + 1));
 
-    set_free_cells(list->data, list->list_size, new_size, new_size);
+    set_free_cells(list->data, list->list_size + 1, new_size, new_size);
 
     list->list_size = new_size;
 
