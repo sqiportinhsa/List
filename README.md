@@ -26,12 +26,12 @@ Attention! Most of the functions take the real index of element in list, not the
 There are two functions over this one:
 
 ```c++
-size_t insert_head(List *list, Elem_t elem)
+size_t list_insert_head(List *list, Elem_t elem)
 ```
 Inserts element to the first logical position of list.
 
 ```c++
-size_t insert_back(List *list, Elem_t elem)
+size_t list_insert_back(List *list, Elem_t elem)
 ```
 Inserts element to the last logical position of list.
 
@@ -43,12 +43,12 @@ Elem_t list_pop(List *list, size_t position)
 Pops element placed in given position from list and returns its value. There are two functions over this one:
 
 ```c++
-Elem_t pop_head(List *list)
+Elem_t list_pop_head(List *list)
 ```
 Pops element from the first logical position. Useful if you want to use list as queue.
 
 ```c++
-Elem_t pop_back(List *list)
+Elem_t list_pop_back(List *list)
 ```
 Pops the last (logical) element from list. Useful if you want to use list as stack.
 
