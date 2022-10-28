@@ -7,7 +7,7 @@
 
 static void set_free_cells(List_elem *data, size_t first, size_t last, size_t size);
 
-static size_t calculate_new_size(List *list, size_t new_size);
+static size_t calculate_new_size(const List *list, size_t new_size);
 
 static int  check_position(const List *list, size_t position);
 static int  cell_is_free(const List_elem *elem);
@@ -67,7 +67,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->cr_logs->func_of_creation = func;
     list->cr_logs->line_of_creation = line;
 
-    return NO_LIST_ERORS;
+    return NO_LIST_ERRORS;
 }
 
 int list_dtor(List *list) {
@@ -87,11 +87,11 @@ int list_dtor(List *list) {
     list->list_size  = 0;
     list->free       = 0;
 
-    return NO_LIST_ERORS;
+    return NO_LIST_ERRORS;
 }
 
 size_t list_insert(List *list, Elem_t elem, size_t position) {
-    int errors = NO_LIST_ERORS;
+    int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR_WITH_MESSAGE(list,       errors, NULLPTR_TO_LIST,
                                    "Error: can't add element to non-existing list\n");
@@ -105,6 +105,8 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
     }
 
     errors |= check_position(list, position);
+
+    errors |= list_verificator(list);
 
     RETURN_IF(errors);
 
@@ -127,8 +129,26 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
     return inserted;
 }
 
+size_t insert_head(List *list, Elem_t elem) {
+    int errors = NO_LIST_ERRORS;
+    errors |= list_verificator(list);
+
+    RETURN_IF(errors);
+
+    return list_insert(list, elem, 0);
+}
+
+size_t insert_back(List *list, Elem_t elem) {
+    int errors = NO_LIST_ERRORS;
+    errors |= list_verificator(list);
+
+    RETURN_IF(errors);
+
+    return list_insert(list, elem, list->data[0].prev);
+}
+
 Elem_t list_pop(List *list, size_t position) {
-    int errors = NO_LIST_ERORS;
+    int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR_WITH_MESSAGE(list,       errors, NULLPTR_TO_LIST,
                                    "Error: can't pop element from non-existing list\n");
@@ -164,9 +184,27 @@ Elem_t list_pop(List *list, size_t position) {
     return popped;
 }
 
+Elem_t pop_head(List *list) {
+    int errors = NO_LIST_ERRORS;
+    errors |= list_verificator(list);
+
+    RETURN_IF(errors);
+
+    return list_pop(list, 0);
+}
+
+Elem_t pop_back(List *list) {
+    int errors = NO_LIST_ERRORS;
+    errors |= list_verificator(list);
+
+    RETURN_IF(errors);
+
+    return list_pop(list, list->data[0].prev);
+}
+
 
 int list_verificator(const List *list) {
-    int errors = NO_LIST_ERORS;
+    int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR(list, errors, NULLPTR_TO_LIST);
 
@@ -175,9 +213,13 @@ int list_verificator(const List *list) {
     CHECK_FOR_NULLPTR(list->cr_logs, errors, NULLPTR_TO_LOGS);
     CHECK_FOR_NULLPTR(list->data,    errors, NULLPTR_TO_DATA);
 
-    
+    if (list->busy_elems > list->list_size) {
+        errors |= BUSY_EXC_SIZE;
+    }
 
-    errors |= verify_loop(list);
+    if (!(errors & BUSY_EXC_SIZE)) {
+        errors |= verify_loop(list);
+    }
 
     return errors;
 }
@@ -225,7 +267,7 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
 }
 
 int resize_list_without_sort(List *list, size_t new_size) {
-    int errors = NO_LIST_ERORS;
+    int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR_WITH_MESSAGE(list, errors, NULLPTR_TO_LIST, 
                                    "Error: can't resize non existing list\n");
@@ -245,7 +287,7 @@ int resize_list_without_sort(List *list, size_t new_size) {
 }
 
 int resize_list_with_sort(List *list, size_t new_size) {
-    int errors = NO_LIST_ERORS;
+    int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR_WITH_MESSAGE(list, errors, NULLPTR_TO_LIST, 
                                    "Error: can't resize non existing list\n");
@@ -261,9 +303,16 @@ int resize_list_with_sort(List *list, size_t new_size) {
 
     size_t pos_in_list = 0;
 
-    for (size_t i = 0; i <= list->busy_elems; ++i) {
+    new_data[0] = list->data[0];
+    pos_in_list = list->data[0].next;
+    new_data[0].next = 1;
+    new_data[0].prev = list->busy_elems;
+
+    for (size_t i = 1; i <= list->busy_elems; ++i) {
         new_data[i] = list->data[pos_in_list];
         pos_in_list = list->data[pos_in_list].next;
+        new_data[i].next = (i + 1) % new_size;
+        new_data[i].prev = (i - 1) % new_size;
     }
 
     set_free_cells(new_data, list->busy_elems + 1, new_size, new_size);
@@ -271,11 +320,45 @@ int resize_list_with_sort(List *list, size_t new_size) {
     free(list->data);
     list->data      = new_data;
     list->list_size = new_size;
+    list->free      = (list->busy_elems) % new_size;
 
     return errors;
 }
 
-static size_t calculate_new_size(List *list, size_t new_size) {
+size_t get_real_index_by_logical(List *list, size_t logical_index, int *errors) {
+    int found_errors = NO_LIST_ERRORS;
+
+    if (list == nullptr) {
+        if (errors == nullptr) {
+            return 0;
+        }
+
+        *errors |= NULLPTR_TO_LIST;
+        return 0;
+    }
+
+    size_t real_index = 0;
+
+    for (size_t i = 0; i < logical_index; ++i) {
+        found_errors |= check_position(list, real_index);
+        found_errors |= check_position(list, i);
+
+        if (found_errors != 0) {
+            if (errors == nullptr) {
+                return 0;
+            }
+
+            *errors |= found_errors;
+            return 0;
+        }
+        
+        real_index = list->data[real_index].next;
+    }
+
+    return real_index;
+}
+
+static size_t calculate_new_size(const List *list, size_t new_size) {
     assert(list != nullptr);
 
     if (list->list_size > new_size) {
@@ -334,7 +417,7 @@ static int generate_graph_code(const List *list) {
 
     FILE *code_output = fopen(code_filename, "w");
 
-    int errors = NO_LIST_ERORS;
+    int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR_WITH_MESSAGE(code_output, errors, CANT_OPEN_FILE, 
                                    "Error: can't open file for graph generation\n");
@@ -346,8 +429,10 @@ static int generate_graph_code(const List *list) {
 
     Print_code("info [label = \"List | size: %zu | busy: %zu |<f1>next free: %zu\"]", 
                                       list->list_size, list->busy_elems, list->free);
-
-    Print_code("info:<f1>->node%zu [color=\"%s\",constraint=false];\n", list->free, FREE_ARROW_COLOR);
+    if (list->free != 0) {
+        Print_code("info:<f1>->node%zu [color=\"%s\",constraint=false];\n", 
+                                             list->free, FREE_ARROW_COLOR);
+    }
     Print_code("info->node0 [style=invis, weight = 100]\n");
 
     Print_reserved(list);
@@ -400,7 +485,7 @@ static int generate_graph_code(const List *list) {
     PrintToLogs("Picture is generated. You can find it by name %s.\n", png_file_name);
     #endif
 
-    return NO_LIST_ERORS;
+    return NO_LIST_ERRORS;
 }
 
 static void generate_file_name(char *filename, const char *extension)  {
@@ -414,7 +499,7 @@ static int check_position(const List *list, size_t position) {
     if (position > list->list_size) {
         return POS_DONT_EXIST;
     }
-    return NO_LIST_ERORS;
+    return NO_LIST_ERRORS;
 }
 
 static int cell_is_free(const List_elem *elem) {
@@ -424,13 +509,15 @@ static int cell_is_free(const List_elem *elem) {
 static int verify_loop(const List *list) {
     int errors = 0;
 
-    CHECK_FOR_NULLPTR(list, errors, NULLPTR_TO_LIST);
+    CHECK_FOR_NULLPTR(list,       errors, NULLPTR_TO_LIST);
+    CHECK_FOR_NULLPTR(list->data, errors, NULLPTR_TO_DATA);
 
     RETURN_IF(errors & NULLPTR_TO_LIST);
+    RETURN_IF(errors & NULLPTR_TO_DATA);
 
     if (list->busy_elems == 0) {
         if (list->data[0].next == 0 && list->data[0].prev == 0) {
-            return NO_LIST_ERORS;
+            return NO_LIST_ERRORS;
         }
         return BROKEN_LOOP;
     }
@@ -439,7 +526,7 @@ static int verify_loop(const List *list) {
 
     for (size_t i = 0; i < list->busy_elems - 1; ++i) {
         next = list->data[next].next;
-        if (next == 0) {
+        if (next == 0 || check_position(list, next)) {
             return (BROKEN_LOOP);
         }
     }
@@ -450,5 +537,5 @@ static int verify_loop(const List *list) {
         return BROKEN_LOOP;
     }
 
-    return NO_LIST_ERORS;
+    return NO_LIST_ERRORS;
 }

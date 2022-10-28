@@ -25,7 +25,7 @@ typedef struct {
 } List;
 
 typedef enum {
-    NO_LIST_ERORS   = 0,
+    NO_LIST_ERRORS  = 0,
     NULLPTR_TO_LIST = 1 << 0,
     NULLPTR_TO_DATA = 1 << 1,
     NULLPTR_TO_LOGS = 1 << 2,
@@ -38,6 +38,7 @@ typedef enum {
     CANNOT_RESIZE   = 1 << 9,
     CANT_OPEN_FILE  = 1 << 10,
     CANT_GENER_PIC  = 1 << 11,
+    BUSY_EXC_SIZE   = 1 << 12,
 } List_errors;
 
 
@@ -109,7 +110,14 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 int list_dtor(List *list);
 
 size_t list_insert(List *list, Elem_t elem, size_t position);
-int list_pop(List *list, size_t position);
+
+size_t insert_head(List *list, Elem_t elem);
+size_t insert_back(List *list, Elem_t elem);
+
+Elem_t list_pop(List *list, size_t position);
+
+Elem_t pop_head(List *list);
+Elem_t pop_back(List *list);
 
 int list_verificator(const List *list);
 
@@ -117,5 +125,7 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
 
 int resize_list_without_sort(List *list, size_t new_size);
 int resize_list_with_sort(List *list, size_t new_size);
+
+size_t get_real_index_by_logical(List *list, size_t logical_index, int *errors = nullptr);
 
 #endif
