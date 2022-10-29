@@ -15,7 +15,7 @@ int main() {
         list_insert(&list1, i, i-1);
     }
 
-    dump_list(&list1, "List after adding 5 elements consequentially\n");
+    dump_list(&list1, "List after adding 4 elements consequentially\n");
 
     for (int i = 6; i < 10; ++i) {
         list_insert(&list1, i, i-3);
@@ -38,11 +38,11 @@ int main() {
 
     dump_list(&list1, "List after resizing with sorting to size more than amount of busy elements\n");
 
-    dump_list(&list1, "Poped element from position %d: %d\n List after popping:\n", 5, list_pop(&list1, 5));
+    dump_list(&list1, "Poped element from position %d: %d. List after popping:\n", 5, list_pop(&list1, 5));
 
-    dump_list(&list1, "Poped first element: %d\n List after popping:\n", list_pop_head(&list1));
+    dump_list(&list1, "Poped first element: %d. List after popping:\n", list_pop_head(&list1));
 
-    dump_list(&list1, "Poped last element: %d\n List after popping:\n", list_pop_back(&list1));
+    dump_list(&list1, "Poped last element: %d. List after popping:\n", list_pop_back(&list1));
 
     list_insert_head(&list1, 14);
 
