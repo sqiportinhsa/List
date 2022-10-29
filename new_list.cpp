@@ -129,7 +129,9 @@ size_t list_insert_head(List *list, Elem_t elem) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
-    RETURN_IF(errors);
+    if (errors != 0) {
+        return 0;
+    }
 
     return list_insert(list, elem, 0);
 }
@@ -138,7 +140,9 @@ size_t list_insert_back(List *list, Elem_t elem) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
-    RETURN_IF(errors);
+    if (errors != 0) {
+        return 0;
+    }
 
     return list_insert(list, elem, list->data[0].prev);
 }
@@ -186,7 +190,9 @@ Elem_t list_pop_head(List *list) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
-    RETURN_IF(errors);
+    if (errors != 0) {
+        return 0;
+    }
 
     return list_pop(list, list->data[0].next);
 }
@@ -195,7 +201,9 @@ Elem_t list_pop_back(List *list) {
     int errors = NO_LIST_ERRORS;
     errors |= list_verificator(list);
 
-    RETURN_IF(errors);
+    if (errors != 0) {
+        return 0;
+    }
 
     return list_pop(list, list->data[0].prev);
 }
@@ -227,7 +235,7 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
 
     FILE *output = GetLogStream();
 
-    fprintf(output, "List dump called in %s(%d), function %s\n", file, line, func);
+    fprintf(output, "List dump called in %s(%d), function %s: ", file, line, func);
 
     va_list ptr = {};
     va_start(ptr, message);
@@ -322,8 +330,8 @@ int resize_list_with_sort(List *list, size_t new_size) {
     for (size_t i = 1; i <= list->busy_elems; ++i) {
         new_data[i] = list->data[pos_in_list];
         pos_in_list = list->data[pos_in_list].next;
-        new_data[i].next = (i + 1) % (new_size + 1);
-        new_data[i].prev = (i - 1) % (new_size + 1);
+        new_data[i].next = (i + 1) % (list->busy_elems + 1);
+        new_data[i].prev = (i - 1) % (list->busy_elems + 1);
     }
 
     set_free_cells(new_data, list->busy_elems + 1, new_size, new_size);
@@ -331,7 +339,7 @@ int resize_list_with_sort(List *list, size_t new_size) {
     free(list->data);
     list->data      = new_data;
     list->list_size = new_size;
-    list->free      = (list->busy_elems + 1) % new_size;
+    list->free      = (list->busy_elems + 1) % (new_size + 1);
 
     return errors;
 }
@@ -533,9 +541,9 @@ static int verify_loop(const List *list) {
         return BROKEN_LOOP;
     }
 
-    size_t next = list->data[0].next;
+    size_t next = 0;
 
-    for (size_t i = 0; i < list->busy_elems - 1; ++i) {
+    for (size_t i = 0; i < list->busy_elems; ++i) {
         next = list->data[next].next;
         if (next == 0 || check_position(list, next)) {
             return (BROKEN_LOOP);
