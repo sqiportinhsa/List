@@ -4,7 +4,7 @@
 #include "Libs/logging.h"
 
 int main() {
-    CreateLogFile("logs.html");
+    FILE *output = CreateLogFile("logs.html");
 
     List list1 = {};
     list_ctr(&list1, 10);

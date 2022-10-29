@@ -2,7 +2,7 @@
 
 #include "logging.h"
 
-FILE* Logstream = stdout;
+FILE *Logstream = stdout;
 
 FILE* GetLogStream() {
     return Logstream;
@@ -29,7 +29,7 @@ FILE* CreateLogFile(const char *name) {
 
     SetLogStream(logfile);
 
-    fprintf(loogfile, "<pre>");
+    fprintf(logfile, "<pre>");
 
     return logfile;
 }
