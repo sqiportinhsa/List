@@ -73,7 +73,7 @@ static const char *FREE_ARROW_COLOR = "#423723";
 #define list_ctr(list, list_size) real_list_ctr(list, list_size, __FILE__, __PRETTY_FUNCTION__, \
                                                                                         __LINE__)
 
-#define dump_list(list) real_dump_list(list, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+#define dump_list(list, message, ...) real_dump_list(list, __FILE__, __PRETTY_FUNCTION__, __LINE__, message, ##__VA_ARGS__)
 
 #define Print_code(format, ...)                    \
         fprintf(code_output, format, ##__VA_ARGS__);
@@ -121,7 +121,7 @@ Elem_t list_pop_back(List *list);
 
 int list_verificator(const List *list);
 
-int real_dump_list(const List *list, const char* file, const char* func, int line);
+int real_dump_list(const List *list, const char* file, const char* func, int line, const char *message, ...);
 
 int resize_list_without_sort(List *list, size_t new_size);
 int resize_list_with_sort(List *list, size_t new_size);

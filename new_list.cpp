@@ -26,8 +26,7 @@ static const int max_png_file_name_len = 15;
 
 int real_list_ctr(List *list, size_t list_size, const char *file, const char *func, int line) {
     if (list == nullptr) {
-        PrintToLogs("can't create list: nullptr to it\n");
-        dump_list(list);
+        dump_list(list, "can't create list: nullptr to it\n");
         return NULLPTR_TO_LIST;
     }
 
@@ -37,8 +36,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->data = (List_elem*) calloc(list_size + 1, sizeof(List_elem));
 
     if (list->data == nullptr) {
-        PrintToLogs("can't create list of size %zu: not enough memory\n", list_size);
-        dump_list(list);
+        dump_list(list, "can't create list of size %zu: not enough memory\n", list_size);
         list_dtor(list);
         return NOT_ENOUGTH_MEM;
     }
@@ -46,8 +44,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->cr_logs = (Creation_logs*) calloc(1, sizeof(Creation_logs));
 
     if (list->data == nullptr) {
-        PrintToLogs("can't create list of size %zu: not enough memory for logs\n", list_size);
-        dump_list(list);
+        dump_list(list, "can't create list of size %zu: not enough memory for logs\n", list_size);
         list_dtor(list);
         return NOT_ENOUGTH_MEM;
     }
@@ -72,8 +69,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 
 int list_dtor(List *list) {
     if (list == nullptr) {
-        PrintToLogs("can't destruct list: pointer to it is nullptr\n");
-        dump_list(list);
+        dump_list(list, "can't destruct list: pointer to it is nullptr\n");
         return NULLPTR_TO_LIST;
     }
 
@@ -99,8 +95,7 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
                                    "Error: can't add element because data ptr is nullptr\n");
 
     if (list->free == 0) {
-        PrintToLogs("Error: can't add element to full list\n");
-        dump_list(list);
+        dump_list(list, "Error: can't add element to full list\n");
         return LIST_IS_FULL;
     }
 
@@ -156,14 +151,16 @@ Elem_t list_pop(List *list, size_t position) {
                                    "Error: can't pop element because data ptr is nullptr\n");
 
     if (position == 0) {
-        PrintToLogs("Error: can't pop zero element of list\n");
-        dump_list(list);
-        return POP_ZERO_ELEM;
+        dump_list(list, "Error: can't pop zero element of list\n");
+        return 0;
     }
 
     errors |= check_position(list, position);
 
-    RETURN_IF(errors & POS_DONT_EXIST);
+    if (errors != 0) {
+        PrintToLogs("Incorrect pop");
+        return 0;
+    }
 
     size_t prev = list->data[position].prev;
     size_t next = list->data[position].next;
@@ -190,7 +187,7 @@ Elem_t list_pop_head(List *list) {
 
     RETURN_IF(errors);
 
-    return list_pop(list, 0);
+    return list_pop(list, list->data[0].next);
 }
 
 Elem_t list_pop_back(List *list) {
@@ -224,12 +221,17 @@ int list_verificator(const List *list) {
     return errors;
 }
 
-int real_dump_list(const List *list, const char* file, const char* func, int line) {
+int real_dump_list(const List *list, const char* file, const char* func, int line, const char *message, ...) {
     int errors = list_verificator(list);
 
     FILE *output = GetLogStream();
 
     fprintf(output, "List dump called in %s(%d), function %s\n", file, line, func);
+
+    va_list ptr = {};
+    va_start(ptr, message);
+    vfprintf(output, message, ptr);
+    va_end(ptr);
     
     if (errors & NULLPTR_TO_LIST) {
         fprintf(output, "Can't dump list from nullptr pointer\n");
@@ -319,8 +321,8 @@ int resize_list_with_sort(List *list, size_t new_size) {
     for (size_t i = 1; i <= list->busy_elems; ++i) {
         new_data[i] = list->data[pos_in_list];
         pos_in_list = list->data[pos_in_list].next;
-        new_data[i].next = (i + 1) % new_size;
-        new_data[i].prev = (i - 1) % new_size;
+        new_data[i].next = (i + 1) % (new_size + 1);
+        new_data[i].prev = (i - 1) % (new_size + 1);
     }
 
     set_free_cells(new_data, list->busy_elems + 1, new_size, new_size);
@@ -328,7 +330,7 @@ int resize_list_with_sort(List *list, size_t new_size) {
     free(list->data);
     list->data      = new_data;
     list->list_size = new_size;
-    list->free      = (list->busy_elems) % new_size;
+    list->free      = (list->busy_elems + 1) % new_size;
 
     return errors;
 }
