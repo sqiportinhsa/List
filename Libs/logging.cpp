@@ -2,7 +2,7 @@
 
 #include "logging.h"
 
-FILE *Logstream = stdout;
+FILE* Logstream = stdout;
 
 FILE* GetLogStream() {
     return Logstream;
@@ -16,6 +16,20 @@ void RealPrintToLogs(FILE *stream, const char *func, const char *file, int line,
     va_list ptr = {};
     va_start(ptr, format);
     fprintf(stream, "Message called at %s(%d) in file %s:", func, line, file);
-    fprintf(stream, format, ptr);
+    vfprintf(stream, format, ptr);
     va_end(ptr);
+}
+
+FILE* CreateLogFile(const char *name) {
+    FILE *logfile = fopen(name, "w");
+
+    if (logfile == nullptr) {
+        return nullptr;
+    }
+
+    SetLogStream(logfile);
+
+    fprintf(loogfile, "<pre>");
+
+    return logfile;
 }

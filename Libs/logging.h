@@ -16,5 +16,6 @@ void  SetLogStream(FILE *stream);
 FILE* GetLogStream();
 void  RealPrintToLogs(FILE *stream, const char *func, const char *file, 
                                     int line, const char *format, ...);
+FILE *CreateLogFile(const char *name)
 
 #endif
