@@ -84,7 +84,15 @@ int resize_list_with_sort(List *list, size_t new_size)
 ```
 Resizes list with sorting (but works slover than without sorting, time is linear by amount of busy elements). Can resize list to every size that is less than size_t maximum value and more (or equal) than amount of busy elements.
 
-* Get real index
+* Getting indexes
+```c++
+size_t list_get_next(const List *list, size_t index);
+```
+```c++
+size_t list_get_prev(const List *list, size_t index);
+```
+Returns physical indexes of next and previous element by its physical index.
+
 ```c++
 size_t get_real_index_by_logical(List *list, size_t logical_index, int *errors = nullptr)
 ```
