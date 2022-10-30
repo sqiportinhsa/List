@@ -51,8 +51,8 @@ static const char *DATACELL_FRAME_COLOR = "#232D42";
 static const char *FREE_FILL__COLOR = "#E2D2B4";
 static const char *FREE_FRAME_COLOR = "#423723";
 
-static const char *PREV_ARROW_COLOR = "#42232D";
-static const char *NEXT_ARROW_COLOR = "#2D4223";
+static const char *PREV_ARROW_COLOR = "#54303c";
+static const char *NEXT_ARROW_COLOR = "#303C54";
 
 static const char *FREE_ARROW_COLOR = "#423723";
 
@@ -77,6 +77,7 @@ static const char *FREE_ARROW_COLOR = "#423723";
 
 #define Print_code(format, ...)                    \
         fprintf(code_output, format, ##__VA_ARGS__);
+
 
 #define Print_busy(list, i)                                                                           \
         Print_code("node%zu [label=\"%d|{p:%4zu|i:%4zu|n:%4zu}\",fillcolor=\"%s\",color=\"%s\"];\n",  \
@@ -105,6 +106,7 @@ static const char *FREE_ARROW_COLOR = "#423723";
 
 #define Print_connection_arrow(list, i)                                     \
         Print_code("node%zu->node%zu [style=invis, weight = 100]\n", i, i+1);
+        
 
 int real_list_ctr(List *list, size_t list_size, const char *file, const char *func, int line);
 int list_dtor(List *list);
