@@ -208,6 +208,49 @@ Elem_t list_pop_back(List *list) {
 }
 
 
+size_t list_get_next(const List *list, size_t index) {
+    if (list == nullptr) {
+        PrintToLogs("Can't return next element in non existing list (pointer to list is nullptr)\n");
+        return 0;
+    }
+
+    if (check_position(list, index) != 0) {
+        dump_list(list, "Can't return next for element with incorrect index. Index: %zu. List:\n",
+                                                                                           index);
+        return 0;
+    }
+
+    size_t next = list->data[index].next;
+
+    if (next == 0) {
+        next = list->data[next].next;
+    }
+
+    return next;
+}
+
+size_t list_get_prev(const List *list, size_t index) {
+    if (list == nullptr) {
+        PrintToLogs("Can't return prev element in non existing list (pointer to list is nullptr)\n");
+        return 0;
+    }
+
+    if (check_position(list, index) != 0) {
+        dump_list(list, "Can't return prev for element with incorrect index. Index: %zu. List:\n", 
+                                                                                           index);
+        return 0;
+    }
+
+    size_t prev = list->data[index].prev;
+
+    if (prev == 0) {
+        prev = list->data[prev].prev;
+    }
+
+    return prev;
+}
+
+
 int list_verificator(const List *list) {
     int errors = NO_LIST_ERRORS;
 
@@ -448,10 +491,10 @@ static int generate_graph_code(const List *list) {
     Print_code("node [shape=record,style=\"filled\"];\n");
     Print_code("splines=ortho;\n");
 
-    Print_code("info [label = \"List | size: %zu | busy: %zu |<f1>next free: %zu\"]", 
+    Print_code("info [label = \"List | size: %zu | busy: %zu |next free: %zu\"]", 
                                       list->list_size, list->busy_elems, list->free);
     if (list->free != 0) {
-        Print_code("info:<f1>->node%zu [color=\"%s\",constraint=false];\n", 
+        Print_code("info->node%zu [color=\"%s\",constraint=false];\n", 
                                              list->free, FREE_ARROW_COLOR);
     }
     Print_code("info->node0 [style=invis, weight = 100]\n");
