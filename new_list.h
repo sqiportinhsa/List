@@ -19,26 +19,27 @@ typedef struct {
 typedef struct {
     Creation_logs* cr_logs = nullptr;
     List_elem*        data = nullptr;
-    size_t      busy_elems = 0;
+    size_t        in_usage = 0;
     size_t       list_size = 0;
     size_t            free = 0;
 } List;
 
 typedef enum {
-    NO_LIST_ERRORS  = 0,
-    NULLPTR_TO_LIST = 1 << 0,
-    NULLPTR_TO_DATA = 1 << 1,
-    NULLPTR_TO_LOGS = 1 << 2,
-    NOT_ENOUGTH_MEM = 1 << 3,
-    POP_ZERO_ELEM   = 1 << 4,
-    LIST_IS_FULL    = 1 << 5,
-    POS_DONT_EXIST  = 1 << 6,
-    BROKEN_LOOP     = 1 << 7,
-    NON_POISON_FREE = 1 << 8,
-    CANNOT_RESIZE   = 1 << 9,
-    CANT_OPEN_FILE  = 1 << 10,
-    CANT_GENER_PIC  = 1 << 11,
-    BUSY_EXC_SIZE   = 1 << 12,
+    NO_LIST_ERRORS      = 0,
+    NULLPTR_TO_LIST     = 1 << 0,
+    NULLPTR_TO_DATA     = 1 << 1,
+    NULLPTR_TO_LOGS     = 1 << 2,
+    NOT_ENOUGTH_MEM     = 1 << 3,
+    POP_ZERO_ELEM       = 1 << 4,
+    LIST_IS_FULL        = 1 << 5,
+    POS_DONT_EXIST      = 1 << 6,
+    NON_POISON_FREE     = 1 << 7,
+    CANNOT_RESIZE       = 1 << 8,
+    CANT_OPEN_FILE      = 1 << 9,
+    CANT_GENER_PIC      = 1 << 10,
+    USED_EXC_SIZE       = 1 << 11,
+    BROKEN_IN_USE_LOOP  = 1 << 12,
+    BROKEN__FREE__LOOP  = 1 << 13,
 } List_errors;
 
 
