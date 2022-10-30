@@ -268,7 +268,7 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
     if (errors & NULLPTR_TO_DATA) {
         fprintf(output, "\tCan't print data: ptr to data is nullptr\n");
     } else {
-        fprintf(output, "\tList data:\n");
+        fprintf(output, "\tList data visualisation:\n");
         generate_graph_code(list);
     }
 
@@ -496,14 +496,15 @@ static int generate_graph_code(const List *list) {
                                                          code_filename, png_file_name);
     
     if (system(command) != 0) {
-        PrintToLogs("Error: can't generate picture\n");
+        PrintToLogs("Error: can't generate picture. Text dump:\n");
+        dump_list_data(list, GetLogStream());
         return CANT_GENER_PIC;
     }
 
     #ifdef LOGS_TO_HTML
-    PrintToLogs("\n<img src=\"%s\">\n", png_file_name);
+    fprintf(GetLogStream(), "\n<img src=\"%s\">\n", png_file_name);
     #else
-    PrintToLogs("Picture is generated. You can find it by name %s.\n", png_file_name);
+    fprintf(GetLogStream(), "Picture is generated. You can find it by name %s.\n", png_file_name);
     #endif
 
     return NO_LIST_ERRORS;
