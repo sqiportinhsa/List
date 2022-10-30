@@ -119,6 +119,9 @@ Elem_t list_pop(List *list, size_t position);
 Elem_t list_pop_head(List *list);
 Elem_t list_pop_back(List *list);
 
+size_t list_get_next(const List *list, size_t index);
+size_t list_get_prev(const List *list, size_t index);
+
 int list_verificator(const List *list);
 
 int real_dump_list(const List *list, const char* file, const char* func, int line, const char *message, ...);

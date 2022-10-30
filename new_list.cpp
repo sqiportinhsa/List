@@ -214,7 +214,7 @@ size_t list_get_next(const List *list, size_t index) {
         return 0;
     }
 
-    if (check_position(list, index) != 0) {
+    if (check_position(list, index) != 0 || index == 0) {
         dump_list(list, "Can't return next for element with incorrect index. Index: %zu. List:\n",
                                                                                            index);
         return 0;
@@ -235,7 +235,7 @@ size_t list_get_prev(const List *list, size_t index) {
         return 0;
     }
 
-    if (check_position(list, index) != 0) {
+    if (check_position(list, index) != 0 || index == 0) {
         dump_list(list, "Can't return prev for element with incorrect index. Index: %zu. List:\n", 
                                                                                            index);
         return 0;
