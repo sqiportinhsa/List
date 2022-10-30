@@ -302,9 +302,9 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
     }
 
     fprintf(output, "List info:\n");
-    fprintf(output, "\tsize: %zu\n", list->list_size);
-    fprintf(output, "\tbusy: %zu\n", list->busy_elems);
-    fprintf(output, "\tfree: %zu\n", list->free);
+    fprintf(output, "\tsize  : %zu\n", list->list_size);
+    fprintf(output, "\tin use: %zu\n", list->busy_elems);
+    fprintf(output, "\tfree  : %zu\n", list->free);
 
     fflush(output);
 
@@ -491,7 +491,7 @@ static int generate_graph_code(const List *list) {
     Print_code("node [shape=record,style=\"filled\"];\n");
     Print_code("splines=ortho;\n");
 
-    Print_code("info [label = \"List | size: %zu | busy: %zu |next free: %zu\"]", 
+    Print_code("info [label = \"List | size: %zu | in use: %zu |next free: %zu\"]", 
                                       list->list_size, list->busy_elems, list->free);
     if (list->free != 0) {
         Print_code("info->node%zu [color=\"%s\",constraint=false];\n", 
@@ -500,32 +500,31 @@ static int generate_graph_code(const List *list) {
     Print_code("info->node0 [style=invis, weight = 100]\n");
 
     Print_reserved(list);
-    Print_connection_arrow(list, (size_t) 0);
-    Print_busy__next_arrow(list, (size_t) 0);
-    Print_busy__prev_arrow(list, (size_t) 0);
+    Print_connection__arrow(list, (size_t) 0);
+    Print_in_use_next_arrow(list, (size_t) 0);
+    Print_in_use_prev_arrow(list, (size_t) 0);
 
     for (size_t i = 1; i < list->list_size; ++i) {
         if (cell_is_free(&list->data[i])) {
             Print_free(list, i);
 
-            Print_connection_arrow(list, i);
-            Print_free__next_arrow(list, i);
+            Print_connection__arrow(list, i);
+            Print_free__next__arrow(list, i);
         } else {
             Print_busy(list, i);
 
-            Print_connection_arrow(list, i);
-            Print_busy__next_arrow(list, i);
-            Print_busy__prev_arrow(list, i);
+            Print_connection__arrow(list, i);
+            Print_in_use_next_arrow(list, i);
+            Print_in_use_prev_arrow(list, i);
         }
     }
 
     if (cell_is_free(&list->data[list->list_size])) {
-        Print_free            (list, list->list_size);
-        Print_free__next_arrow(list, list->list_size);
+        Print_free             (list, list->list_size);
     } else {
-        Print_busy            (list, list->list_size);
-        Print_busy__next_arrow(list, list->list_size);
-        Print_busy__prev_arrow(list, list->list_size);
+        Print_busy             (list, list->list_size);
+        Print_in_use_next_arrow(list, list->list_size);
+        Print_in_use_prev_arrow(list, list->list_size);
     }
     
     Print_code("}");

@@ -92,19 +92,19 @@ static const char *FREE_ARROW_COLOR = "#423723";
         Print_code("node0 [label=\"reserved|{p:%4zu|i:%4zu|n:%4zu}\",fillcolor=\"%s\",color=\"%s\"];\n",  \
                   list->data[0].prev, 0, list->data[0].next, RESERVED_FILL__COLOR, RESERVED_FRAME_COLOR); \
 
-#define Print_busy__next_arrow(list, i)                                                          \
-        Print_code("node%zu->node%zu [color=\"%s\",constraint=false];\n", i, list->data[i].next, \
+#define Print_in_use_next_arrow(list, i)                                                          \
+        Print_code("node%zu->node%zu [color=\"%s\",constraint=false];\n", i, list->data[i].next,  \
                                                                               NEXT_ARROW_COLOR);
 
-#define Print_busy__prev_arrow(list, i)                                                          \
-        Print_code("node%zu->node%zu [color=\"%s\",constraint=false];\n", i, list->data[i].prev, \
+#define Print_in_use_prev_arrow(list, i)                                                          \
+        Print_code("node%zu->node%zu [color=\"%s\",constraint=false];\n", i, list->data[i].prev,  \
                                                                               PREV_ARROW_COLOR);
                                                                               
-#define Print_free__next_arrow(list, i)                                                          \
-        Print_code("node%zu->node%zu [color=\"%s\",constraint=false];\n", i, list->data[i].next, \
+#define Print_free__next__arrow(list, i)                                                          \
+        Print_code("node%zu->node%zu [color=\"%s\",constraint=false];\n", i, list->data[i].next,  \
                                                                               FREE_ARROW_COLOR);
 
-#define Print_connection_arrow(list, i)                                     \
+#define Print_connection__arrow(list, i)                                     \
         Print_code("node%zu->node%zu [style=invis, weight = 100]\n", i, i+1);
         
 
