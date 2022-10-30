@@ -19,7 +19,6 @@ static int  generate_graph_code(const List *list);
 static void generate_file_name(char *filename, const char *extension);
 
 
-static int file_with_graphviz_code_counter = 0;
 static const int max_file_with_graphviz_code_name_len = 15;
 static const int max_generation_png_command_len = 30;
 static const int max_png_file_name_len = 15;
@@ -235,12 +234,14 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
 
     FILE *output = GetLogStream();
 
-    fprintf(output, "List dump called in %s(%d), function %s: ", file, line, func);
+    fprintf(output, "<b>List dump called in %s(%d), function %s: ", file, line, func);
 
     va_list ptr = {};
     va_start(ptr, message);
     vfprintf(output, message, ptr);
     va_end(ptr);
+
+    fprintf(output, "\n</b>");
     
     if (errors & NULLPTR_TO_LIST) {
         fprintf(output, "Can't dump list from nullptr pointer\n");
@@ -272,6 +273,7 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
     }
 
     fprintf(output, "\n");
+    fprintf(output, "\n<hr>\n");
     fflush(output);
 
     return errors;
@@ -508,6 +510,7 @@ static int generate_graph_code(const List *list) {
 }
 
 static void generate_file_name(char *filename, const char *extension)  {
+    static int file_with_graphviz_code_counter = 0;
     sprintf(filename, "graph_%d.%s", file_with_graphviz_code_counter, extension);
     ++file_with_graphviz_code_counter;
 }
