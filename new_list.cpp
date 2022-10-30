@@ -12,8 +12,10 @@ static size_t calculate_new_size(const List *list, size_t new_size);
 
 static int  check_position(const List *list, size_t position);
 static int  cell_is_free(const List_elem *elem);
-static int  verify_loop(const List *list);
 static void dump_list_data(const List *list, FILE *output);
+
+static int verify_free(const List *list);
+static int verify_loop(const List *list);
 
 static int  generate_graph_code(const List *list);
 static void generate_file_name(char *filename, const char *extension);
@@ -50,7 +52,7 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     }
 
     list->list_size  = list_size;
-    list->busy_elems = 0;
+    list->in_usage = 0;
 
     list->data[0].val  = data_poison;
     list->data[0].prev = 0;
@@ -79,7 +81,7 @@ int list_dtor(List *list) {
     list->data    = nullptr;
     list->cr_logs = nullptr;
 
-    list->busy_elems = 0;
+    list->in_usage   = 0;
     list->list_size  = 0;
     list->free       = 0;
 
@@ -119,7 +121,7 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
 
     list->data[inserted].val  = elem;
 
-    ++list->busy_elems;
+    ++list->in_usage;
 
     return inserted;
 }
@@ -180,7 +182,7 @@ Elem_t list_pop(List *list, size_t position) {
 
     list->free = position;
 
-    --list->busy_elems;
+    --list->in_usage;
 
     return popped;
 }
@@ -261,12 +263,13 @@ int list_verificator(const List *list) {
     CHECK_FOR_NULLPTR(list->cr_logs, errors, NULLPTR_TO_LOGS);
     CHECK_FOR_NULLPTR(list->data,    errors, NULLPTR_TO_DATA);
 
-    if (list->busy_elems > list->list_size) {
-        errors |= BUSY_EXC_SIZE;
+    if (list->in_usage > list->list_size) {
+        errors |= USED_EXC_SIZE;
     }
 
-    if (!(errors & BUSY_EXC_SIZE)) {
+    if (!(errors & USED_EXC_SIZE)) {
         errors |= verify_loop(list);
+        errors |= verify_free(list);
     }
 
     return errors;
@@ -303,7 +306,7 @@ int real_dump_list(const List *list, const char* file, const char* func, int lin
 
     fprintf(output, "List info:\n");
     fprintf(output, "\tsize  : %zu\n", list->list_size);
-    fprintf(output, "\tin use: %zu\n", list->busy_elems);
+    fprintf(output, "\tin use: %zu\n", list->in_usage);
     fprintf(output, "\tfree  : %zu\n", list->free);
 
     fflush(output);
@@ -370,21 +373,21 @@ int resize_list_with_sort(List *list, size_t new_size) {
     new_data[0] = list->data[0];
     pos_in_list = list->data[0].next;
     new_data[0].next = 1;
-    new_data[0].prev = list->busy_elems;
+    new_data[0].prev = list->in_usage;
 
-    for (size_t i = 1; i <= list->busy_elems; ++i) {
+    for (size_t i = 1; i <= list->in_usage; ++i) {
         new_data[i] = list->data[pos_in_list];
         pos_in_list = list->data[pos_in_list].next;
-        new_data[i].next = (i + 1) % (list->busy_elems + 1);
-        new_data[i].prev = (i - 1) % (list->busy_elems + 1);
+        new_data[i].next = (i + 1) % (list->in_usage + 1);
+        new_data[i].prev = (i - 1) % (list->in_usage + 1);
     }
 
-    set_free_cells(new_data, list->busy_elems + 1, new_size, new_size);
+    set_free_cells(new_data, list->in_usage + 1, new_size, new_size);
 
     free(list->data);
     list->data      = new_data;
     list->list_size = new_size;
-    list->free      = (list->busy_elems + 1) % (new_size + 1);
+    list->free      = (list->in_usage + 1) % (new_size + 1);
 
     return errors;
 }
@@ -492,7 +495,7 @@ static int generate_graph_code(const List *list) {
     Print_code("splines=ortho;\n");
 
     Print_code("info [label = \"List | size: %zu | in use: %zu |next free: %zu\"]", 
-                                      list->list_size, list->busy_elems, list->free);
+                                      list->list_size, list->in_usage, list->free);
     if (list->free != 0) {
         Print_code("info->node%zu [color=\"%s\",constraint=false];\n", 
                                              list->free, FREE_ARROW_COLOR);
@@ -580,26 +583,57 @@ static int verify_loop(const List *list) {
     RETURN_IF(errors & NULLPTR_TO_LIST);
     RETURN_IF(errors & NULLPTR_TO_DATA);
 
-    if (list->busy_elems == 0) {
+    if (list->in_usage == 0) {
         if (list->data[0].next == 0 && list->data[0].prev == 0) {
             return NO_LIST_ERRORS;
         }
-        return BROKEN_LOOP;
+        return BROKEN_IN_USE_LOOP;
     }
 
     size_t next = 0;
 
-    for (size_t i = 0; i < list->busy_elems; ++i) {
+    for (size_t i = 0; i < list->in_usage; ++i) {
         next = list->data[next].next;
-        if (next == 0 || check_position(list, next)) {
-            return (BROKEN_LOOP);
+        if (next == 0 || check_position(list, next) || cell_is_free(&list->data[next])) {
+            return BROKEN_IN_USE_LOOP;
         }
     }
 
     next = list->data[next].next;
 
     if (next != 0) {
-        return BROKEN_LOOP;
+        return BROKEN_IN_USE_LOOP;
+    }
+
+    return NO_LIST_ERRORS;
+}
+
+static int verify_free(const List *list) {
+    int errors = 0;
+
+    CHECK_FOR_NULLPTR(list,       errors, NULLPTR_TO_LIST);
+    CHECK_FOR_NULLPTR(list->data, errors, NULLPTR_TO_DATA);
+
+    RETURN_IF(errors & NULLPTR_TO_LIST);
+    RETURN_IF(errors & NULLPTR_TO_DATA);
+
+    if (list->in_usage > list->list_size) {
+        return BROKEN__FREE__LOOP;
+    }
+
+    size_t next_free = list->free;
+
+    for (size_t i = 0; i < list->list_size - list->in_usage; ++i) {
+        if (!cell_is_free(&list->data[next_free]) || 
+            check_position(list, next_free) || next_free == 0) {
+            return BROKEN__FREE__LOOP;
+        }
+
+        next_free = list->data[next_free].next;
+    }
+
+    if (next_free != 0) {
+        return BROKEN__FREE__LOOP;
     }
 
     return NO_LIST_ERRORS;
