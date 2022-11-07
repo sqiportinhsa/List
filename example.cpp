@@ -38,7 +38,7 @@ int main() {
 
     dump_list(&list1, "List after resizing with sorting to size more than amount of busy elements\n");
 
-    dump_list(&list1, "Poped element from position %d: %d. List after popping:\n", 5, list_pop(&list1, 5));
+    dump_list(&list1, "Poped element from position %d: %d. List after popping:\n", 5, list_delete(&list1, 5));
 
     dump_list(&list1, "Poped first element: %d. List after popping:\n", list_pop_head(&list1));
 

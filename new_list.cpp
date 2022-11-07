@@ -148,7 +148,7 @@ size_t list_insert_back(List *list, Elem_t elem) {
     return list_insert(list, elem, list->data[0].prev);
 }
 
-Elem_t list_pop(List *list, size_t position) {
+Elem_t list_delete(List *list, size_t position) {
     int errors = NO_LIST_ERRORS;
 
     CHECK_FOR_NULLPTR_WITH_MESSAGE(list,       errors, NULLPTR_TO_LIST,
@@ -195,7 +195,7 @@ Elem_t list_pop_head(List *list) {
         return 0;
     }
 
-    return list_pop(list, list->data[0].next);
+    return list_delete(list, list->data[0].next);
 }
 
 Elem_t list_pop_back(List *list) {
@@ -206,7 +206,7 @@ Elem_t list_pop_back(List *list) {
         return 0;
     }
 
-    return list_pop(list, list->data[0].prev);
+    return list_delete(list, list->data[0].prev);
 }
 
 
