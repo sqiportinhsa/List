@@ -90,7 +90,7 @@ static const char *FREE_ARROW_COLOR = "#423723";
                                         i, i, list->data[i].next, FREE_FILL__COLOR, FREE_FRAME_COLOR);
 
 #define Print_reserved(list)                                                                              \
-        Print_code("node0 [label=\"reserved|{p:%4zu|i:%4zu|n:%4zu}\",fillcolor=\"%s\",color=\"%s\"];\n",  \
+        Print_code("node0 [label=\"reserved|{p:%4zu|i:%4d|n:%4zu}\",fillcolor=\"%s\",color=\"%s\"];\n",   \
                   list->data[0].prev, 0, list->data[0].next, RESERVED_FILL__COLOR, RESERVED_FRAME_COLOR); \
 
 #define Print_in_use_next_arrow(list, i)                                                          \
