@@ -26,6 +26,14 @@ static const int max_generation_png_command_len = 30;
 static const int max_png_file_name_len = 15;
 
 
+#define memory_allocate(ptr, size, type)                                                      \
+        ptr = (type*) calloc(size, sizeof(type));                                             \
+        if (ptr == nullptr) {                                                                 \
+            dump_list(list, "can't create list of size %zu: not enough memory\n", list_size); \
+            list_dtor(list);                                                                  \
+            return NOT_ENOUGTH_MEM;                                                           \
+        }
+
 int real_list_ctr(List *list, size_t list_size, const char *file, const char *func, int line) {
     if (list == nullptr) {
         dump_list(list, "can't create list: nullptr to it\n");
@@ -35,21 +43,10 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
     list->data    = nullptr;
     list->cr_logs = nullptr;
 
-    list->data = (List_elem*) calloc(list_size + 1, sizeof(List_elem));
+    memory_allocate(list->data, list_size + 1, List_elem);
 
-    if (list->data == nullptr) {
-        dump_list(list, "can't create list of size %zu: not enough memory\n", list_size);
-        list_dtor(list);
-        return NOT_ENOUGTH_MEM;
-    }
+    memory_allocate(list->cr_logs, 1, Creation_logs);
 
-    list->cr_logs = (Creation_logs*) calloc(1, sizeof(Creation_logs));
-
-    if (list->data == nullptr) {
-        dump_list(list, "can't create list of size %zu: not enough memory for logs\n", list_size);
-        list_dtor(list);
-        return NOT_ENOUGTH_MEM;
-    }
 
     list->list_size  = list_size;
     list->in_usage = 0;
@@ -68,6 +65,8 @@ int real_list_ctr(List *list, size_t list_size, const char *file, const char *fu
 
     return NO_LIST_ERRORS;
 }
+
+#undef memory_allocate
 
 int list_dtor(List *list) {
     if (list == nullptr) {
@@ -112,6 +111,7 @@ size_t list_insert(List *list, Elem_t elem, size_t position) {
     list->free = list->data[inserted].next;
 
     list->data[list->data[position].next].prev = inserted;
+
 
     list->data[inserted].next = list->data[position].next;
     list->data[inserted].prev = position;
@@ -460,21 +460,29 @@ static void dump_list_data(const List *list, FILE *output) {
     assert(output != nullptr);
 
     fprintf(output, "\t\tindex: {");
+
     for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8d ", (int) i);
     }
+
     fprintf(output, "}\n\t\tdata:  {");
+
     for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8d ", list->data[i].val);
     }
+
     fprintf(output, "}\n\t\tprev:  {");
+
     for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8zu ", list->data[i].prev);
     }
+
     fprintf(output, "}\n\t\tnext:  {");
+
     for (size_t i = 0; i <= list->list_size; ++i) {
         fprintf(output, "%8zu ", list->data[i].next);
     }
+
     fprintf(output, "}\n");
 }
 
